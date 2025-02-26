@@ -9,7 +9,15 @@ use rand::{rng, Rng};
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
     let wallpapers = wallpaper_files()?;
+
+    // Change to specific wallpaper
+    if args.len() == 2 && wallpapers.contains(&args[1]) {
+        modify_conf(args[1].to_owned())?;
+        return Ok(())
+    }
+
     let random_nr = rng().random_range(0..wallpapers.len());
     
     modify_conf(wallpapers[random_nr].to_owned())?;
