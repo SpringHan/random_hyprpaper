@@ -14,7 +14,10 @@ fn main() -> Result<()> {
 
     // Change to specific wallpaper
     if args.len() == 2 && wallpapers.contains(&args[1]) {
-        modify_conf(args[1].to_owned())?;
+        if wallpapers.contains(&args[1]) {
+            modify_conf(args[1].to_owned())?;
+        }
+
         return Ok(())
     }
 
