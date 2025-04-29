@@ -1,8 +1,8 @@
 // Random hyprpaper
 
-use std::fs::{read_dir, OpenOptions};
+use std::fs::read_dir;
 use std::error::Error;
-use std::io::Write;
+use std::io::{self, Write};
 
 use rand::{rng, Rng};
 
@@ -11,19 +11,25 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let wallpapers = wallpaper_files()?;
+    let mut stdio = io::stdout();
 
     // Change to specific wallpaper
     if args.len() == 2 && wallpapers.contains(&args[1]) {
         if wallpapers.contains(&args[1]) {
-            modify_conf(args[1].to_owned())?;
+            stdio.write(get_path(
+                &format!("wallpapers/{}", args[1])
+            )?.as_bytes())?;
         }
 
         return Ok(())
     }
 
     let random_nr = rng().random_range(0..wallpapers.len());
-    
-    modify_conf(wallpapers[random_nr].to_owned())?;
+    let wallpaper_path = get_path(
+        &format!("wallpapers/{}", wallpapers[random_nr])
+    )?;
+
+    stdio.write(wallpaper_path.as_bytes())?;
 
     Ok(())
 }
@@ -31,7 +37,7 @@ fn main() -> Result<()> {
 fn get_path(dir: &str) -> Result<String> {
     let user_name = std::env::var("USER")?;
     let path_str = format!(
-        "/{}/.config/hypr/{}",
+        "/{}/.config/niri/{}",
         if &user_name == "root" {
             String::from("root")
         } else {
@@ -61,24 +67,4 @@ fn wallpaper_files() -> Result<Vec<String>> {
         .collect::<Vec<_>>();
 
     Ok(wallpapers)
-}
-
-fn modify_conf(wallpaper: String) -> Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(get_path("hyprpaper.conf")?)?;
-
-    let full_path = get_path(&format!("wallpapers/{}", wallpaper))?;
-
-    let new_conf = format!(
-        "preload = {}\nwallpaper = ,{}\nsplash = false",
-        full_path,
-        full_path
-    );
-
-    file.write(new_conf.as_bytes())?;
-
-    Ok(())
 }
