@@ -10,20 +10,22 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
-    let wallpapers = wallpaper_files()?;
     let mut stdio = io::stdout();
 
     // Change to specific wallpaper
-    if args.len() == 2 && wallpapers.contains(&args[1]) {
-        if wallpapers.contains(&args[1]) {
-            stdio.write(get_path(
-                &format!("wallpapers/{}", args[1])
-            )?.as_bytes())?;
-        }
+    if args.len() == 2 {
+        let current_path = std::env::current_dir()?;
+        stdio.write(
+            current_path
+                .join(&args[1])
+                .to_string_lossy()
+                .as_bytes()
+        )?;
 
         return Ok(())
     }
 
+    let wallpapers = wallpaper_files()?;
     let random_nr = rng().random_range(0..wallpapers.len());
     let wallpaper_path = get_path(
         &format!("wallpapers/{}", wallpapers[random_nr])
